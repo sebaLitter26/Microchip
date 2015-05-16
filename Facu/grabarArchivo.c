@@ -10,31 +10,31 @@ typedef struct{
 void grabar_linea_variable(FILE* arch_bin, char * linea)
 {
 	t_empleado emp;
-	
+
 	//sueldo
 	char * pact = strchr(linea,'\n');
-	*pact = '\o';  //desreferenciamos el puntero    asi reemplazamos el caracter
+	*pact = '\0';  //desreferenciamos el puntero    asi reemplazamos el caracter
 	pact = strchr(linea, '|');  //lee de atras para adelante    busca ' | '
 	scanf(pact+1, "%f", &emp.sueldo);    //
-	
-	
+
+
 	//fecha
-	*pact = '\o';
+	*pact = '\0';
 	pact = strchr(linea , '|');
 	sscanf(pact+1,"%d/%d/%d",&emp.f_nac.dia,$emp.f_nac.mes,&emp.f_nac.anio);
-	
+
 	//sexo
-	*pact ='\o';
+	*pact ='\0';
 	pact=strchr(linea,'|');
 	emp.sexo=*(pact+1);
-	
+
 	//apyn
 	*pact = '|';
 	pact = strchr(linea, '|');
-	*(pact+51)='\o';
+	*(pact+51)='\0';
 	strcpy(emp.apyn, pact+1);
-	
-	*pact ='\o';
+
+	*pact ='\0';
 	sscanf(linea, "%d", &emp.dni);
 	fwrite(&emp, sizeof(t_empleado),1,"arch.bin");
 }
@@ -89,7 +89,7 @@ int binario_a_texto(const char * path_bin,const char * path_txt)
 			fclose(arch_txt);
 		return ERROR_ARCHIVO;
 	}
-	
+
 	fread(&emp,sizeof(t_empleado),1,arch_bin);
 	while(!feof(arch_bin))
 	{
