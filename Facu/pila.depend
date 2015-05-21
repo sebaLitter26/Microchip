@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1431273148 source:c:\users\agustina\documents\project codeblock\pila\main.c
+	<stdio.h>
+	<stdlib.h>
+	"pila.h"
+
+1431214358 c:\users\agustina\documents\project codeblock\pila\pila.h
+
