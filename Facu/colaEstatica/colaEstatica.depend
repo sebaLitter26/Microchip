@@ -1,8 +1,0 @@
-# depslib dependency file v1.0
-1431785511 source:c:\users\agustina\documents\github\microchip\facu\colaestatica\main.c
-	<stdio.h>
-	<stdlib.h>
-	"cola.h"
-
-1431780950 c:\users\agustina\documents\github\microchip\facu\colaestatica\cola.h
-
