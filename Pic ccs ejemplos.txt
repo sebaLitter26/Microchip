@@ -1,0 +1,134 @@
+El Watchdog, o "perro guardian" es un concepto de protección usado para volver a reiniciar el programa cuando éste "se pierde" o realiza una acción no prevista. 
+
+Es un dispositivo que resetea al micro cada intervalo de tiempo, salvo que el programa le ponga el contador a 0. De esta manera, si el programa se queda colgado en algún sitio, y no refresca al Watchdog, él se encargará de resetear al micro y evitar el cuelgue. 
+
+No es extraño que en microelectrónica se den circunstancias de hardware o firmware no previstas por el diseñador en las que un microprocesador se quede en un estado indeterminado del que le sea imposible salir sin una ayuda externa. 
+
+El Watchdog lo que hace fundamentalmente es resetear el micro tras un periodo de tiempo determinado. Su funcionamiento es similar a la Interrupción por Desbordamiento de un Timer, que se produce cuando un Timer que es incrementado continuamente pasa de su valor máximo al mínimo para comenzar de nuevo a contar. 
+En el caso del Watchdog en lugar de saltar una interrupción se genera un reset automático en el momento de producirse dicho desbordamiento. 
+
+Pero evidentemente en condiciones normales, nuestro micro funcionando correctamente, no debería producirse dicho reset automático. 
+
+Para evitar que el reset se dispare es para lo que aplicamos el restart_wdt(); o sea que "restauramos" el timer del Watchdog, o lo que es lo mismo: lo volvemos a poner a 0 "a mano" y vuelve de nuevo a iniciar su cuenta para acercarse al abismo y amenazarnos con resetear el micro si antes no lo "restauramos" de nuevo. 
+
+Un ejemplo tonto: 
+Configuramos nuestro Watchdog para que salte cada 5 ms, por ejemplo. 
+Entramos en una rutina que espera a que le lleguen una docena de caracteres vía RS232, y cada vez que le llega uno hace un restart_wdt(). 
+Al recibir el doceavo carácter sale de la rutina y continua su ejecución normal. 
+Por manos del demonio se nos escapa el hacha que con la que estábamos haciendo juegos malabares y corta accidentalmente el cable de la RS232, justo cuando el PIC había recibido el carácter número 11 de los 12 que esperaba. 
+Por lo tanto nuestro programa se queda esperando un carácter que nunca le va a llegar, al menos durante el tiempo en que tardemos en sustituir el cable accidentado. 
+
+¿Y qué ocurre entonces con el resto de del programa que debía estar funcionando? pues que todo está detenido indefinidamente
+. 
+Pero, para eso está el Watchdog. Como restaurábamos el contador cada vez que recibíamos un carácter y estos iban llegando, uno a uno en su cadencia natural, el Watchdog no se desbordaba y todo iba bien. Pero tras recibir nuestro 11 carácter y quedarse esperando el 12 nadie ha restaurado el Watchdog por lo que este camina, paso a paso, tick a tick, hasta el temible desbordamiento ... y éste se produce indefectiblemente 5 ms después de haber recibido el onceavo carácter. 
+
+El PIC se resetea y todo vuelve a comenzar de nuevo. 
+
+Si hemos sido lo suficientemente inteligentes como para escribir un 1 en la EEPROM al iniciar la recepción de los susodichos 12 bytes, y teníamos previsto escribir un 0 en la EEPROM en el mismo sitio para indicar que la última recepción de 12 bytes fue un completo éxito tendremos disponible un indicador veraz y seguro de que al reiniciarse nuestro PIC sabremos fehacientemente que la última recepción fue bien o por el contrario se convirtió en un completo, total y rotundo fracaso y, por lo menos, nos tomaremos con precaución el asunto de la RS232. 
+
+
+
+Ejemplo para entender
+
+si el usuario no manda una char por rs232 cada 2304MS el pic se resetea por el WDT
+
+
+
+#include <16F1823.h> 
+#fuses XT, WDT, BROWNOUT, PUT, NOLVP 
+#use delay(clock=4000000) 
+#use rs232(baud=9600, xmit=PIN_C6, rcv=PIN_C7)  
+
+function BIP(){
+	output_high(PIN_A2);    //  en pin A2 poner un buzzer o led , segun la cantidad de veces que parpadea indica la causa del restarteo del WDT
+	delay_ms(50);
+	output_low(PIN_A2);
+	delay_ms(100);
+}
+
+void main() 
+{ 
+char c; 
+
+c = restart_cause(); 
+printf("c = %x  ", c); 
+
+
+
+switch(c)
+	{
+
+		case WDT_FROM_SLEEP:
+
+			BIP();
+
+		case WDT_TIMEOUT:
+
+			
+			printf("\r\nRestarted processor because of watchdog timeout!\r\n"); 
+						
+			BIP();
+
+		case MCLR_FROM_SLEEP:
+
+			
+						
+			BIP();
+
+		case MCLR_FROM_RUN:
+
+			
+			
+			BIP();
+
+		case NORMAL_POWER_UP:
+
+			
+			printf("\r\nNormal power up!\r\n");
+			
+			BIP();
+
+		case BROWNOUT_RESTART:			      // Aqui se mete casi siempre que sufre ruido la pba
+							// Reiniciamos la pba pero sin que el usuario se de cuenta
+
+
+
+	}
+ 
+
+   setup_wdt(WDT_2304MS); 
+    
+   while(TRUE) 
+   { 
+      restart_wdt(); 
+      printf("Hit any key to avoid a watchdog timeout.\r\n"); 
+      getc(); 
+   } 
+}
+
+
+
+
+
+
+
+
+//-------------------------------------------------------------------------------------
+
+Documentacion De PICS
+http://www.itq.edu.mx/carreras/IngElectronica/archivos_contenido/Apuntes%20de%20materias/Apuntes_PIC_C_2017.pdf
+
+
+//RS232 
+http://picmania.garcia-cuervo.net/picc.php
+
+
+Mejorar la Inmunidad a ruidos
+https://www.nxp.com/files-static/microcontrollers/doc/app_note/AN2764.pdf?&fsrch=1 
+
+//Reloj Pic 
+http://www.puntoflotante.net/CCSRTC3TINY.c
+
+
+//programa para ver repositorio para almacenar los proyectos
+https://github.com/git-for-windows/git/releases/tag/v2.21.0.windows.1
