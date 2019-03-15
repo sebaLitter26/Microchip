@@ -133,3 +133,5 @@ http://www.puntoflotante.net/CCSRTC3TINY.c
 //programa para ver repositorio para almacenar los proyectos
 https://github.com/git-for-windows/git/releases/tag/v2.21.0.windows.1
 o Cygwin
+
+https://mcutronics.wordpress.com/2016/10/27/como-montar-un-bootloader-en-tu-pic/
